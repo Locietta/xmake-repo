@@ -7,7 +7,7 @@ package("mdspan")
 
     add_versions("2026.02.24", "80fc772eb812b45097c28fc0a46d8ff006138d69")
 
-    on_fetch(function (package)
+    on_install(function (package)
         return {
             includedirs = {path.join(package:sourcedir(), "include")}
         }
