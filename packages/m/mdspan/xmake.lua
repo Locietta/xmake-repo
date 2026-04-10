@@ -1,4 +1,5 @@
 package("mdspan")
+    set_kind("library", {headeronly = true})
     set_homepage("https://github.com/kokkos/mdspan")
     set_description("Reference implementation of mdspan targeting C++23")
     set_license("Apache-2.0 WITH LLVM-exception")
@@ -7,10 +8,10 @@ package("mdspan")
 
     add_versions("2026.02.24", "80fc772eb812b45097c28fc0a46d8ff006138d69")
 
+    add_includedirs("include")
+
     on_install(function (package)
-        return {
-            includedirs = {path.join(package:sourcedir(), "include")}
-        }
+        os.cp("include", package:installdir("include"))
     end)
 
     on_test(function (package)
