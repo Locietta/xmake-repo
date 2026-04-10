@@ -11,7 +11,7 @@ package("mdspan")
     add_includedirs("include")
 
     on_install(function (package)
-        os.cp("include", package:installdir("include"))
+        os.cp("include", package:installdir())
     end)
 
     on_test(function (package)
