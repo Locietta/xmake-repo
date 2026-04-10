@@ -7,13 +7,10 @@ package("mdspan")
 
     add_versions("2026.02.24", "80fc772eb812b45097c28fc0a46d8ff006138d69")
 
-    add_deps("cmake")
-
-    on_install(function (package)
-        local configs = {}
-        table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:is_debug() and "Debug" or "Release"))
-        table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
-        import("package.tools.cmake").install(package, configs)
+    on_fetch(function (package)
+        return {
+            includedirs = {path.join(package:sourcedir(), "include")}
+        }
     end)
 
     on_test(function (package)
