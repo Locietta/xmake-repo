@@ -44,20 +44,39 @@ package("slang-rhi")
 
         import("package.tools.cmake").install(package, configs)
 
-        package:add("links", "slang-rhi", "slang-rhi-resources")
+        package:add("links", "slang-rhi")
 
         local build_dir = package:builddir()
-        -- Copy slang-rhi-resources.lib to package lib directory
+
+        -- Copy private static dependencies that cmake install() doesn't install
+        local function try_copy_lib(lib_path)
+            if os.isfile(lib_path) then
+                os.cp(lib_path, package:installdir("lib"))
+                return true
+            end
+            return false
+        end
+
         if is_plat("windows") then
-            local rc_lib = path.join(build_dir, "slang-rhi-resources.lib")
-            if os.isfile(rc_lib) then
-                os.cp(rc_lib, package:installdir("lib"))
+            -- slang-rhi-resources (embedded shaders)
+            if try_copy_lib(path.join(build_dir, "slang-rhi-resources.lib")) then
+                package:add("links", "slang-rhi-resources")
+            end
+            -- slang-rhi-d3d12ma (D3D12 Memory Allocator, private dep of slang-rhi)
+            if try_copy_lib(path.join(build_dir, "slang-rhi-d3d12ma.lib")) then
+                package:add("links", "slang-rhi-d3d12ma")
+            end
+            -- slang-rhi-vma (Vulkan Memory Allocator, private dep of slang-rhi)
+            if try_copy_lib(path.join(build_dir, "slang-rhi-vma.lib")) then
+                package:add("links", "slang-rhi-vma")
             end
         else
             -- *nix
-            local rc_lib = path.join(build_dir, "libslang-rhi-resources.a")
-            if os.isfile(rc_lib) then
-                os.cp(rc_lib, package:installdir("lib"))
+            if try_copy_lib(path.join(build_dir, "libslang-rhi-resources.a")) then
+                package:add("links", "slang-rhi-resources")
+            end
+            if try_copy_lib(path.join(build_dir, "libslang-rhi-vma.a")) then
+                package:add("links", "slang-rhi-vma")
             end
         end
 
@@ -66,7 +85,6 @@ package("slang-rhi")
             local nvapi_lib = path.join(build_dir, "_deps/nvapi-src/amd64/nvapi64.lib")
             if os.isfile(nvapi_lib) then
                 os.cp(nvapi_lib, package:installdir("lib"))
-                -- add nvapi64.lib to links
                 package:add("links", "nvapi64")
             end
         end
