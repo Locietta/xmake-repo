@@ -71,6 +71,7 @@ rule("slang")
                 path(sourcefile),
                 "-std", language_version,
                 "-O2",
+                "-no-codegen",
                 "-o", path(outputfile),
             }
 
