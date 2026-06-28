@@ -4,9 +4,8 @@ package("slang-rhi")
     set_description("Slang Render Hardware Interface")
 
     add_urls("https://github.com/shader-slang/slang-rhi.git")
+    add_versions("2026.06.23", "35f5396e4e55c161893fb8b1049e2bfae2400dd2")
     add_versions("2026.05.13", "19a511e13490b0affe8a5653af345c9b5ab88b0d")
-    add_versions("2026.04.24", "558bfda10cbb1178e54087b5485ef7baaff1e337")
-    add_versions("2026.03.30", "9eb7734ab0ebd4ead90b9ec0782dbb83521da164")
 
     if is_plat("windows") then
         add_syslinks("d3d11", "d3d12", "dxgi", "dxguid", "Advapi32")
