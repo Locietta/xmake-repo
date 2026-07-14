@@ -4,10 +4,9 @@ package("glaze")
     set_description("Extremely fast, in memory, JSON and interface library for modern C++")
     set_license("MIT")
 
-    add_urls("https://github.com/stephenberry/glaze/archive/refs/tags/$(version).tar.gz",
-             "https://github.com/stephenberry/glaze.git")
+    add_urls("https://github.com/stephenberry/glaze/archive/refs/tags/v$(version).tar.gz")
 
-    add_versions("v7.9.0", "8f2c80483b675c86dd2914c140087f1a73d9ca6fc59bad5375d9a1ecba5f7d34")
+    add_versions("7.9.0", "8f2c80483b675c86dd2914c140087f1a73d9ca6fc59bad5375d9a1ecba5f7d34")
 
     add_configs("ssl", {description = "Enable SSL support for networking", default = false, type = "boolean"})
 
