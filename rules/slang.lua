@@ -4,6 +4,33 @@ local function _is_parent_relpath(p)
     return p and p:find("^%.%.[/\\]?") ~= nil
 end
 
+local function _collect_slang_dependencies(roots, sourcefile)
+    -- `slangc -depfile` does not emit a depfile together with the `-no-codegen`
+    -- mode required by our generic entry-point modules. Track every Slang source
+    -- below each import root as a conservative, reliable fallback until the rule
+    -- uses the Slang API's dependency enumeration.
+    local dependencies = {}
+    local seen = {}
+    local function add_dependency(dependency)
+        local absolute_path = path.absolute(dependency)
+        if not seen[absolute_path] then
+            seen[absolute_path] = true
+            table.insert(dependencies, absolute_path)
+        end
+    end
+
+    add_dependency(sourcefile)
+    for _, root in ipairs(roots) do
+        for _, dependency in ipairs(os.files(path.join(root, "**.slang"))) do
+            add_dependency(dependency)
+        end
+        for _, dependency in ipairs(os.files(path.join(root, "**.slangh"))) do
+            add_dependency(dependency)
+        end
+    end
+    return dependencies
+end
+
 rule("slang")
     set_extensions(".slang", ".slangh")
 
@@ -64,6 +91,7 @@ rule("slang")
         if is_header then
             batchcmds:show_progress(opt.progress, "${color.build.object}copying.slangh %s", sourcefile)
             os.cp(sourcefile, outputfile)
+            batchcmds:add_depfiles(sourcefile)
         else
             local slangc = assert(find_tool("slangc"), "slangc not found!")
             local language_version = target:extraconf("rules", "slang", "language_version") or "default"
@@ -76,10 +104,20 @@ rule("slang")
             }
 
             local include_dirs = target:extraconf("rules", "slang", "include_dirs") or {}
+            local resolved_include_dirs = {}
             for _, dir in ipairs(include_dirs) do
+                local resolved_dir = path(path.join(scriptdir, dir))
+                table.insert(resolved_include_dirs, resolved_dir)
                 table.insert(slangc_opt, "-I")
-                table.insert(slangc_opt, path(path.join(scriptdir, dir)))
+                table.insert(slangc_opt, resolved_dir)
             end
+
+            local dependency_roots = {
+                path.join(scriptdir, output_subdir),
+                path.directory(sourcefile),
+            }
+            table.join2(dependency_roots, resolved_include_dirs)
+            local dependency_files = _collect_slang_dependencies(dependency_roots, sourcefile)
 
             batchcmds:show_progress(opt.progress, "${color.build.object}compiling.slang %s", sourcefile)
             batchcmds:vrunv(slangc.program, slangc_opt)
@@ -90,12 +128,14 @@ rule("slang")
                 })
                 batchcmds:set_depmtime(os.mtime(objectfile))
                 batchcmds:set_depcache(target:dependfile(objectfile))
-                batchcmds:add_depfiles(sourcefile)
+                batchcmds:add_depfiles(dependency_files, slangc.program)
+                batchcmds:add_depvalues(language_version, "-O2", "-no-codegen", resolved_include_dirs)
                 return
             end
+            batchcmds:add_depfiles(dependency_files, slangc.program)
+            batchcmds:add_depvalues(language_version, "-O2", "-no-codegen", resolved_include_dirs)
         end
 
-        batchcmds:add_depfiles(sourcefile)
         batchcmds:set_depmtime(os.mtime(outputfile))
         batchcmds:set_depcache(target:dependfile(outputfile))
     end)
