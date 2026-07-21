@@ -10,6 +10,29 @@
 
 This is a personal xmake package repository, which is used to store the xmake packages I created and maintained. The repository is based on the official xmake-repo.
 
+## Use packages from Pixi
+
+Projects can consume Conda packages from a Pixi workspace through the dedicated `pixi::` namespace. Register the project-provided manager during Xmake's option-check phase:
+
+```lua
+add_moduledirs("xmake/modules")
+option("__pixi_package_manager")
+    set_showmenu(false)
+    on_check(function (option)
+        import("package.manager.pixi.register")()
+        option:enable(true)
+    end)
+option_end()
+
+add_requires("pixi::fmt 12.2.0", {alias = "fmt"})
+add_requires("pixi::libuv", {alias = "libuv"})
+
+target("example")
+    add_packages("fmt", "libuv")
+```
+
+The `pixi::` adapter is independent of Xmake's native `conda::` package manager. The default Pixi environment is used unless `configs.environment` or `PIXI_ENVIRONMENT_NAME` selects another one. `configs.manifest` can point at a different `pixi.toml`, `pyproject.toml`, or workspace directory. If a package is missing, Xmake invokes `pixi add`; use `configs.feature` to choose which Pixi feature is updated.
+
 If you want to know more, please refer to the xmake documentation:
 
 * [Documents](https://xmake.io/guide/project-configuration/add-packages.html)
