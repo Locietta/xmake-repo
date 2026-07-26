@@ -33,6 +33,36 @@ target("example")
 
 The `pixi::` adapter is independent of Xmake's native `conda::` package manager. The default Pixi environment is used unless `configs.environment` or `PIXI_ENVIRONMENT_NAME` selects another one. `configs.manifest` can point at a different `pixi.toml`, `pyproject.toml`, or workspace directory. If a package is missing, Xmake invokes `pixi add`; use `configs.feature` to choose which Pixi feature is updated.
 
+## Use packages from MSYS2
+
+Projects can consume MSYS2 packages through the `msys2-<subenv>::` namespaces, where `<subenv>` is one of `ucrt64`, `mingw64`, `mingw32`, `clang64`, `clang32`, `clangarm64`, or `msys`. Register the manager the same way as Pixi:
+
+```lua
+add_moduledirs("xmake/modules")
+option("__msys2_package_manager")
+    set_showmenu(false)
+    on_check(function (option)
+        import("package.manager.msys2.register")()
+        option:enable(true)
+    end)
+option_end()
+
+add_requires("msys2-ucrt64::libiconv", {alias = "libiconv"})
+
+target("example")
+    add_packages("libiconv")
+```
+
+The sub-environment implies the MSYS2 package-name prefix, so `msys2-ucrt64::libiconv` resolves `mingw-w64-ucrt-x86_64-libiconv` and `msys2-mingw64::zlib` resolves `mingw-w64-x86_64-zlib`. It also implies the target architecture and scopes discovery to that sub-environment's own directory, so a `ucrt64` requirement never picks up `mingw64`'s copy of the same library. The bare `msys2::` namespace performs no name mangling and expects a fully qualified package name.
+
+Unlike Xmake's builtin `pacman::` manager, this adapter is meant to be used from a **native** (non-MSYS2) shell:
+
+* `pacman` is located through the MSYS2 installation root rather than `PATH`, so MSYS2 binaries never have to be exposed globally where they would shadow the tools vcpkg, Conan, and CMake rely on. The root is taken from `%MSYS2%`, falling back to `%MSYS2_ROOT%`, `configs.msys2_root`, and the default install locations.
+* The POSIX paths reported by `pacman -Ql` are translated to native Windows paths without needing `cygpath`.
+* A sub-environment's own `include` directory is deliberately **not** emitted as a system include path: it is already the compiler's default, and passing it again reorders the search chain ahead of the bundled libstdc++ headers, breaking `#include_next`.
+
+If a package is missing, Xmake invokes `pacman -Sy --noconfirm --needed`, which writes to the shared MSYS2 installation and may require elevation.
+
 If you want to know more, please refer to the xmake documentation:
 
 * [Documents](https://xmake.io/guide/project-configuration/add-packages.html)
