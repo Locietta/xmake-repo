@@ -66,6 +66,7 @@ package("slang")
         assert(layout, "unsupported slang layout: " .. slang_dir)
 
         package:set("installdir", slang_dir)
+        package:addenv("PATH", layout.bindir)
     end)
 
     on_fetch(function (package)
