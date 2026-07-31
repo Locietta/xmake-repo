@@ -23,7 +23,7 @@ import("package.manager.pixi.utils", {alias = "pixi_utils"})
 --
 function main(name, opt)
     opt = opt or {}
-    if not is_host(opt.plat) or os.arch() ~= opt.arch then
+    if not pixi_utils.is_host_target(opt) then
         return
     end
 

@@ -19,7 +19,7 @@ import("package.manager.pixi.utils", {alias = "pixi_utils"})
 -- Add a missing conda package to a Pixi workspace and install its environment.
 function main(name, opt)
     opt = opt or {}
-    assert(is_host(opt.plat) and os.arch() == opt.arch,
+    assert(pixi_utils.is_host_target(opt),
         "pixi cannot install %s for %s/%s", name, opt.plat, opt.arch)
 
     local pixi = find_tool("pixi")

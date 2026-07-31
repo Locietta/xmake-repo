@@ -14,6 +14,19 @@
 
 import("core.base.json")
 
+-- Can the host Pixi environment serve packages for the requested plat/arch?
+--
+-- Pixi only ever installs packages for the host, so a cross build can never be
+-- satisfied. Windows is the exception worth allowing: building with GCC there
+-- selects Xmake's `mingw` platform, which is still the host, and names x64 as
+-- `x86_64`.
+function is_host_target(opt)
+    opt = opt or {}
+    local plat_ok = is_host(opt.plat) or (opt.plat == "mingw" and is_host("windows"))
+    local host_arch = os.arch() == "x64" and "x86_64" or os.arch()
+    return plat_ok and (opt.arch == os.arch() or opt.arch == host_arch)
+end
+
 function manifest(opt)
     local configs = opt and opt.configs or {}
     local manifest_path = configs.manifest or os.getenv("PIXI_PROJECT_MANIFEST")
