@@ -42,8 +42,20 @@ function main(name, opt)
         return
     end
 
+    local package_files = pixi_utils.package_files(metadata)
+    local windows = opt.plat == "windows" or opt.plat == "mingw"
+    local dll_names = {}
+    if windows then
+        for _, file in ipairs(package_files) do
+            local filename = path.filename(file:trim()):lower()
+            if filename:endswith(".dll") then
+                dll_names[filename:sub(1, -#".dll" - 1)] = true
+            end
+        end
+    end
+
     local result = {}
-    for _, file in ipairs(pixi_utils.package_files(metadata)) do
+    for _, file in ipairs(package_files) do
         local relative_file = file:trim()
         local lower_file = relative_file:lower()
 
@@ -54,11 +66,28 @@ function main(name, opt)
             table.insert(result.includedirs, path.join(prefix, include_dir))
         end
 
-        local is_library = lower_file:endswith(".lib")
-            or lower_file:endswith(".a")
-            or lower_file:endswith(".so")
-            or lower_file:endswith(".dylib")
-            or lower_file:find(".so.", 1, true) ~= nil
+        local is_library
+        if windows then
+            is_library = lower_file:endswith(".lib")
+                or (opt.plat == "mingw" and lower_file:endswith(".a"))
+            if is_library and lower_file:endswith(".lib") then
+                local library_name = path.basename(lower_file)
+                -- Conda packages can contain an MSVC static archive named
+                -- lib<name>.lib alongside the <name>.lib import library for
+                -- <name>.dll. MinGW can consume the import library, but not
+                -- the MSVC archive, so retain only the DLL-matching form.
+                if library_name:startswith("lib")
+                    and dll_names[library_name:sub(#"lib" + 1)] then
+                    is_library = false
+                end
+            end
+        elseif opt.plat == "macosx" then
+            is_library = lower_file:endswith(".a") or lower_file:endswith(".dylib")
+        else
+            is_library = lower_file:endswith(".a")
+                or lower_file:endswith(".so")
+                or lower_file:find(".so.", 1, true) ~= nil
+        end
         if is_library then
             local library_dir = path.join(prefix, path.directory(relative_file))
             local library_file = path.join(prefix, relative_file)
