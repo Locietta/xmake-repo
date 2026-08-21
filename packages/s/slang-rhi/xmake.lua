@@ -4,6 +4,7 @@ package("slang-rhi")
     set_description("Slang Render Hardware Interface")
 
     add_urls("https://github.com/shader-slang/slang-rhi.git")
+    add_versions("2026.08.20", "d1ef4f5549fc6ce3d1c47512759a8de0af51e084")
     add_versions("2026.06.23", "35f5396e4e55c161893fb8b1049e2bfae2400dd2")
     add_versions("2026.05.13", "19a511e13490b0affe8a5653af345c9b5ab88b0d")
 

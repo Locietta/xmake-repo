@@ -121,6 +121,7 @@ function main(opt)
     opt = opt or {}
     opt.paths = opt.paths or _candidate_paths()
     opt.check = opt.check or "-v"
+    opt.command = opt.command or "-version"
     local program = nil
     if opt.program then
         program = _resolve_scoop_shim(opt.program)
