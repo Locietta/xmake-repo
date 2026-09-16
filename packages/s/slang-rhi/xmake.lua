@@ -60,6 +60,23 @@ package("slang-rhi")
             return package:config(name) and "ON" or "OFF"
         end
 
+        -- slang-rhi downloads Vulkan-Headers from GitHub at configure time. Prefer
+        -- the headers of an installed Vulkan SDK when they are at least as new as
+        -- the pinned release, so the build does not depend on that download.
+        local function vulkan_sdk_headers()
+            local sdk = os.getenv("VULKAN_SDK")
+            if not sdk or sdk == "" then return nil end
+            local header = path.join(sdk, "include", "vulkan", "vulkan_core.h")
+            if not os.isfile(header) then return nil end
+            local content = io.readfile(header) or ""
+            local patch = tonumber(content:match("#define%s+VK_HEADER_VERSION%s+(%d+)"))
+            local major, minor = content:match("#define%s+VK_HEADER_VERSION_COMPLETE%s+VK_MAKE_API_VERSION%(%s*0%s*,%s*(%d+)%s*,%s*(%d+)%s*,")
+            if not patch or not major or not minor then return nil end
+            local version = tonumber(major) * 1000000 + tonumber(minor) * 1000 + patch
+            if version < 1 * 1000000 + 4 * 1000 + 347 then return nil end
+            return sdk:gsub("\\", "/")
+        end
+
         table.insert(configs, "-DSLANG_RHI_BUILD_SHARED=" .. (package:config("shared") and "ON" or "OFF"))
         table.insert(configs, "-DSLANG_RHI_SLANG_INCLUDE_DIR=" .. slang_path .. "/include")
         table.insert(configs, "-DSLANG_RHI_SLANG_BINARY_DIR=" .. slang_path)
@@ -69,6 +86,10 @@ package("slang-rhi")
         table.insert(configs, "-DSLANG_RHI_BUILD_EXAMPLES=OFF")
 
         table.insert(configs, "-DSLANG_RHI_FETCH_SLANG=OFF")
+        local sdk_headers = package:config("vulkan") and vulkan_sdk_headers() or nil
+        if sdk_headers then
+            table.insert(configs, "-DFETCHCONTENT_SOURCE_DIR_VULKAN_HEADERS=" .. sdk_headers)
+        end
         table.insert(configs, "-DSLANG_RHI_FETCH_DXC=" .. onoff("fetch_dxc"))
         for _, backend in ipairs({"CPU", "VULKAN", "D3D11", "D3D12", "AGILITY_SDK", "NVAPI", "CUDA", "OPTIX", "WGPU", "METAL", "AFTERMATH"}) do
             table.insert(configs, "-DSLANG_RHI_ENABLE_" .. backend .. "=" .. onoff(backend:lower()))
