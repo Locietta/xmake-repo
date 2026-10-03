@@ -10,7 +10,8 @@ package("lighter")
         set_sourcedir(source)
     else
         add_urls("https://github.com/Locietta/lighter.git")
-        add_versions("2026.10.03", "23dabd52d8c22e28ec9e80d6ae5fae0426c86f31")
+        add_versions("0.1.0", "23dabd52d8c22e28ec9e80d6ae5fae0426c86f31")
+        add_versions("0.2.0", "536c017c65a3180be0832f9c29ec3fddfc329794")
     end
 
     -- Needs GCC 16 with -freflection/-fcontracts and the C dependencies from
