@@ -12,6 +12,7 @@ package("lighter")
         add_urls("https://github.com/Locietta/lighter.git")
         add_versions("0.1.0", "23dabd52d8c22e28ec9e80d6ae5fae0426c86f31")
         add_versions("0.2.0", "536c017c65a3180be0832f9c29ec3fddfc329794")
+        add_versions("0.3.0", "0e4010eace0b1d5616c8f2bb5ebf4f5eb77d3876")
     end
 
     -- Needs GCC 16 with -freflection/-fcontracts and the C dependencies from
@@ -20,6 +21,12 @@ package("lighter")
     add_deps("pixi::libcurl", "pixi::libiconv", "pixi::libuv")
 
     on_load(function (package)
+        -- The HTTP server's parser (0.3.0+, and local checkouts). Always built:
+        -- a system llhttp lives outside the Pixi sysroot.
+        local version = package:version()
+        if not version or version:ge("0.3.0") then
+            package:add("deps", "llhttp", {system = false})
+        end
         package:add("syslinks", "stdc++exp")
         if package:is_plat("mingw", "windows") then
             package:add("syslinks", "psapi", "user32", "advapi32", "iphlpapi", "userenv", "ws2_32", "dbghelp", "ole32", "shell32")
