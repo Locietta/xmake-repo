@@ -15,6 +15,7 @@ package("lighter")
         add_versions("0.3.0", "0e4010eace0b1d5616c8f2bb5ebf4f5eb77d3876")
         add_versions("0.3.1", "584438d3986efa9503688439d46de68c57fcda65")
         add_versions("0.4.0", "4abbaf95a2d3c4ad924ee0658414f6089c5e45f8")
+        add_versions("0.5.0", "1641c5b363b0f60ab9e916c2f1b20a6f9cab6b0d")
     end
 
     -- Needs GCC 16 with -freflection/-fcontracts and the C dependencies from
